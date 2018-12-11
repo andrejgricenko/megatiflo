@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gresources>
+  <gresource>
+    <file>megatiflo-window.ui</file>
+    <file>com.github.andrejgricenko.megatiflo.png</file>
+  </gresource>
+</gresources>

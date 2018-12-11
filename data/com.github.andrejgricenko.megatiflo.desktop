@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Megatiflo
+Icon=com.github.andrejgricenko.megatiflo.png
+Exec=megatiflo
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true
