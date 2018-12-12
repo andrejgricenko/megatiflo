@@ -14,8 +14,7 @@
     <property name="child_model">films_store</property>
   </object>
   <template class="MegatifloWindow" parent="GtkApplicationWindow">
-    <property name="width_request">600</property>
-    <property name="height_request">400</property>
+    <property name="height_request">300</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Megatiflo</property>
     <child>
@@ -55,7 +54,7 @@
                 <property name="active">0</property>
                 <items>
                   <item translatable="yes">Новые</item>
-                  <item translatable="yes">Скачанные</item>
+                  <item translatable="yes">Сохранённые</item>
                   <item translatable="yes">Все</item>
                 </items>
                 <signal name="changed" handler="on_category_combo_changed" object="films_tree" swapped="yes"/>
@@ -171,7 +170,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel" id="downloaded_count_label">
+              <object class="GtkLabel" id="saved_count_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>

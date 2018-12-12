@@ -13,20 +13,20 @@ struct _MegatifloWindow
   GtkTreeModelFilter   *films_filter;
   GtkTreeView          *films_tree;
   GtkLabel             *new_count_label;
-  GtkLabel             *downloaded_count_label;
+  GtkLabel             *saved_count_label;
   GtkLabel             *all_count_label;
 };
 
 enum
 {
   CATEGORY_NEW,
-  CATEGORY_DOWNLOADED,
+  CATEGORY_SAVED,
   CATEGORY_ALL  
 };
 
 enum
 {
-  COLUMN_DOWNLOADED,
+  COLUMN_SAVED,
   COLUMN_TITLE
 };
 
@@ -55,14 +55,14 @@ films_filter_func (GtkTreeModel *films_store,
                    gpointer      data)
 {
   MegatifloWindow *self = data;
-  gboolean downloaded;
+  gboolean saved;
   gchar *title;
   const gchar *search;
   gint text_len;
   gboolean match;
   
   gtk_tree_model_get (films_store, iter, 
-                      COLUMN_DOWNLOADED, &downloaded, 
+                      COLUMN_SAVED, &saved,
                       COLUMN_TITLE, &title,
                       -1);
   
@@ -81,9 +81,9 @@ films_filter_func (GtkTreeModel *films_store,
   switch (gtk_combo_box_get_active (self->category_combo))
     {
     case CATEGORY_NEW:
-      return !downloaded;
-    case CATEGORY_DOWNLOADED:
-      return downloaded;
+      return !saved;
+    case CATEGORY_SAVED:
+      return saved;
     default:
       return TRUE;
     }
@@ -198,7 +198,7 @@ add_film_func (gpointer data, gpointer user_data)
 
   gtk_list_store_append (GTK_LIST_STORE (films_model), &iter);
   gtk_list_store_set (GTK_LIST_STORE (films_model), &iter,
-                      COLUMN_DOWNLOADED, FALSE,
+                      COLUMN_SAVED, FALSE,
                       COLUMN_TITLE, new_film,
                       -1);
 }
@@ -223,10 +223,10 @@ update_counts (MegatifloWindow *self)
 {
   GtkTreeModel *films_model = GTK_TREE_MODEL (self->films_store);
   GtkTreeIter iter;
-  gboolean downloaded;
+  gboolean saved;
   gchar *title;
   gint new_count = 0;
-  gint downloaded_count = 0;
+  gint saved_count = 0;
   gint all_count = 0;
   GString *count;
 
@@ -236,14 +236,14 @@ update_counts (MegatifloWindow *self)
   do
     {
       gtk_tree_model_get (films_model, &iter,
-                          COLUMN_DOWNLOADED, &downloaded,
+                          COLUMN_SAVED, &saved,
                           COLUMN_TITLE, &title,
                           -1);
       
       all_count++;
       
-      if (downloaded)
-        downloaded_count++;
+      if (saved)
+        saved_count++;
       else
         new_count++;
       
@@ -255,8 +255,8 @@ update_counts (MegatifloWindow *self)
   
   g_string_printf (count, "%d", new_count);
   gtk_label_set_text (self->new_count_label, count->str);
-  g_string_printf (count, "%d", downloaded_count);
-  gtk_label_set_text (self->downloaded_count_label, count->str);
+  g_string_printf (count, "%d", saved_count);
+  gtk_label_set_text (self->saved_count_label, count->str);
   g_string_printf (count, "%d", all_count);
   gtk_label_set_text (self->all_count_label, count->str);
   
@@ -294,7 +294,7 @@ save_films (GtkListStore *films_store)
   GString *string;
   gchar *film;
   gchar *contents;
-  gboolean downloaded;
+  gboolean saved;
   
   if (!gtk_tree_model_get_iter_first (films_model, &iter))
     return;
@@ -304,11 +304,11 @@ save_films (GtkListStore *films_store)
   do
     {
       gtk_tree_model_get (films_model, &iter,
-                          COLUMN_DOWNLOADED, &downloaded,
+                          COLUMN_SAVED, &saved,
                           COLUMN_TITLE, &film,
                           -1);
 
-      if (downloaded)
+      if (saved)
         g_string_append_printf (string, "%s\n", film);
 
       g_free (film);
@@ -344,7 +344,7 @@ restore_films (GtkListStore *films_store)
     {
       gtk_list_store_append (films_store, &iter);
       gtk_list_store_set (films_store, &iter,
-                          COLUMN_DOWNLOADED, TRUE,
+                          COLUMN_SAVED, TRUE,
                           COLUMN_TITLE, films[i],
                           -1);
     }
@@ -389,7 +389,7 @@ on_films_tree_row_activated (GtkTreeView       *films_tree,
   GtkTreeModel *model;
   GtkTreeIter filter_iter;
   GtkTreeIter model_iter;
-  gboolean downloaded;
+  gboolean saved;
   
   if (gtk_combo_box_get_active (self->category_combo) == CATEGORY_ALL)
     return;
@@ -399,13 +399,13 @@ on_films_tree_row_activated (GtkTreeView       *films_tree,
   
   gtk_tree_model_get_iter (GTK_TREE_MODEL (filter), &filter_iter, path);
   gtk_tree_model_get (GTK_TREE_MODEL (filter), &filter_iter, 
-                      COLUMN_DOWNLOADED, &downloaded, 
+                      COLUMN_SAVED, &saved,
                       -1);
   gtk_tree_model_filter_convert_iter_to_child_iter (filter, 
                                                     &model_iter, 
                                                     &filter_iter);
   gtk_list_store_set (GTK_LIST_STORE (model), &model_iter, 
-                      COLUMN_DOWNLOADED, !downloaded, 
+                      COLUMN_SAVED, !saved,
                       -1);
   save_films (GTK_LIST_STORE (model));
   update_counts (self);
@@ -425,7 +425,7 @@ megatiflo_window_class_init (MegatifloWindowClass *klass)
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, films_filter);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, films_tree);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, new_count_label);
-  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, downloaded_count_label);
+  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, saved_count_label);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, all_count_label);
   
   gtk_widget_class_bind_template_callback (widget_class, on_refresh_button_clicked);
