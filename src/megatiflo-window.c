@@ -8,13 +8,11 @@ struct _MegatifloWindow
   GtkApplicationWindow  parent_instance;
   GtkButton            *refresh_button;
   GtkComboBox          *category_combo;
+  GtkListStore         *category_store;
   GtkSearchEntry       *search_entry;
   GtkListStore         *films_store;
   GtkTreeModelFilter   *films_filter;
   GtkTreeView          *films_tree;
-  GtkLabel             *new_count_label;
-  GtkLabel             *saved_count_label;
-  GtkLabel             *all_count_label;
 };
 
 enum
@@ -22,6 +20,12 @@ enum
   CATEGORY_NEW,
   CATEGORY_SAVED,
   CATEGORY_ALL  
+};
+
+enum
+{
+  CATEGORY_COLUMN_TITLE,
+  CATEGORY_COLUMN_COUNT
 };
 
 enum
@@ -39,10 +43,10 @@ refilter_films (GtkTreeView *film_tree)
 {
   GtkTreeModelFilter *films_filter;
   GtkTreePath *path;
-  
+
   films_filter = GTK_TREE_MODEL_FILTER (gtk_tree_view_get_model (film_tree));
   path = gtk_tree_path_new_first ();
-  
+
   gtk_tree_model_filter_refilter (films_filter);
   gtk_tree_selection_select_path (gtk_tree_view_get_selection (film_tree), path);
 
@@ -105,14 +109,18 @@ load_page (gint page_num)
                  "?page=%d"
                  "&q=%%D1%%82%%D0%%B8%%D1%%84%%D0%%BB%%D0%%BE"
                  "&tab=video";
+
   g_string_printf (url_string, url_template, page_num);
+
   url = g_string_free (url_string, FALSE);
   session = soup_session_new ();
   message = soup_message_new (SOUP_METHOD_GET, url);
+
   soup_session_send_message (session, message);
   g_object_get (message, 
                 "response-body", &body, 
                 NULL);
+
   page = g_strdup (body->data);
   
   g_free (url);
@@ -134,7 +142,7 @@ load_films (GTask        *task,
   GMatchInfo *match_info;
   GList *films = NULL;
   gboolean match;
-            
+
   regex = g_regex_new ("<[^>]+class\\s*=\\s*[\'\"]\\s*video-title[^>]+>"
                        "\\s*([^\\s][^(]+[^\\s(])\\s*\\(\\s*версия",
                        G_REGEX_CASELESS, 0, NULL);
@@ -222,6 +230,7 @@ static void
 update_counts (MegatifloWindow *self)
 {
   GtkTreeModel *films_model = GTK_TREE_MODEL (self->films_store);
+  GtkTreeModel *category_model = GTK_TREE_MODEL (self->category_store);
   GtkTreeIter iter;
   gboolean saved;
   gchar *title;
@@ -230,35 +239,47 @@ update_counts (MegatifloWindow *self)
   gint all_count = 0;
   GString *count;
 
-  if (!gtk_tree_model_get_iter_first (films_model, &iter))
-    return;
-  
-  do
+  if (gtk_tree_model_get_iter_first (films_model, &iter))
     {
-      gtk_tree_model_get (films_model, &iter,
-                          COLUMN_SAVED, &saved,
-                          COLUMN_TITLE, &title,
-                          -1);
-      
-      all_count++;
-      
-      if (saved)
-        saved_count++;
-      else
-        new_count++;
-      
-      g_free (title);
+      do
+        {
+          gtk_tree_model_get (films_model, &iter,
+                              COLUMN_SAVED, &saved,
+                              COLUMN_TITLE, &title,
+                              -1);
+
+          all_count++;
+
+          if (saved)
+            saved_count++;
+          else
+            new_count++;
+
+          g_free (title);
+        }
+      while (gtk_tree_model_iter_next (films_model, &iter));
     }
-  while (gtk_tree_model_iter_next (films_model, &iter));
 
   count = g_string_new (NULL);
   
+  gtk_tree_model_get_iter_first (category_model, &iter);
+
   g_string_printf (count, "%d", new_count);
-  gtk_label_set_text (self->new_count_label, count->str);
+  gtk_list_store_set (self->category_store, &iter,
+                      CATEGORY_COLUMN_COUNT, count->str,
+                      -1);
+
+  gtk_tree_model_iter_next (category_model, &iter);
   g_string_printf (count, "%d", saved_count);
-  gtk_label_set_text (self->saved_count_label, count->str);
+  gtk_list_store_set (self->category_store, &iter,
+                      CATEGORY_COLUMN_COUNT, count->str,
+                      -1);
+
+  gtk_tree_model_iter_next (category_model, &iter);
   g_string_printf (count, "%d", all_count);
-  gtk_label_set_text (self->all_count_label, count->str);
+  gtk_list_store_set (self->category_store, &iter,
+                      CATEGORY_COLUMN_COUNT, count->str,
+                      -1);
   
   g_string_free (count, TRUE);
 }
@@ -420,14 +441,12 @@ megatiflo_window_class_init (MegatifloWindowClass *klass)
   
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, refresh_button);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, category_combo);
+  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, category_store);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, search_entry);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, films_store);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, films_filter);
   gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, films_tree);
-  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, new_count_label);
-  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, saved_count_label);
-  gtk_widget_class_bind_template_child (widget_class, MegatifloWindow, all_count_label);
-  
+
   gtk_widget_class_bind_template_callback (widget_class, on_refresh_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, on_search_entry_search_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_category_combo_changed);
@@ -438,10 +457,10 @@ static void
 megatiflo_window_init (MegatifloWindow *self)
 {
   GdkPixbuf *pixbuf;
+
+  pixbuf = gdk_pixbuf_new_from_resource ("/com.github.andrejgricenko.megatiflo.png", NULL);
   
-  pixbuf = gdk_pixbuf_new_from_resource ("/icon.png", NULL);
-  
-  gtk_widget_init_template (GTK_WIDGET (self));  
+  gtk_widget_init_template (GTK_WIDGET (self));
   gtk_window_set_icon (GTK_WINDOW (self), pixbuf);
   gtk_tree_model_filter_set_visible_func (self->films_filter, 
                                           films_filter_func, 
@@ -450,6 +469,8 @@ megatiflo_window_init (MegatifloWindow *self)
   restore_films (self->films_store);
   refilter_films (self->films_tree);
   update_counts (self);
+
+  g_object_unref (pixbuf);
 }
 
 GtkWidget *

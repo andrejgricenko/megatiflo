@@ -2,6 +2,28 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkListStore" id="category_store">
+    <columns>
+      <!-- column-name category -->
+      <column type="gchararray"/>
+      <!-- column-name count -->
+      <column type="gchararray"/>
+    </columns>
+    <data>
+      <row>
+        <col id="0" translatable="yes">Новые</col>
+        <col id="1" translatable="yes"> </col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Сохранённые</col>
+        <col id="1" translatable="yes"> </col>
+      </row>
+      <row>
+        <col id="0" translatable="yes">Все</col>
+        <col id="1" translatable="yes"> </col>
+      </row>
+    </data>
+  </object>
   <object class="GtkListStore" id="films_store">
     <columns>
       <!-- column-name downloaded -->
@@ -48,16 +70,27 @@
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="category_combo">
+              <object class="GtkComboBox" id="category_combo">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="model">category_store</property>
                 <property name="active">0</property>
-                <items>
-                  <item translatable="yes">Новые</item>
-                  <item translatable="yes">Сохранённые</item>
-                  <item translatable="yes">Все</item>
-                </items>
                 <signal name="changed" handler="on_category_combo_changed" object="films_tree" swapped="yes"/>
+                <child>
+                  <object class="GtkCellRendererText"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+                <child>
+                  <object class="GtkCellRendererText">
+                    <property name="xalign">1</property>
+                    <property name="width_chars">5</property>
+                  </object>
+                  <attributes>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -77,8 +110,9 @@
                 <accelerator key="f" signal="grab-focus" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="pack_type">end</property>
                 <property name="position">2</property>
               </packing>
             </child>
@@ -86,7 +120,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -121,96 +155,6 @@
           </object>
           <packing>
             <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="homogeneous">True</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">end</property>
-                <property name="label" translatable="yes">Новые </property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="new_count_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">0</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">end</property>
-                <property name="label" translatable="yes">Скачанные </property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="saved_count_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">0</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">end</property>
-                <property name="label" translatable="yes">Все </property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">4</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="all_count_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">0</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">5</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">2</property>
           </packing>
