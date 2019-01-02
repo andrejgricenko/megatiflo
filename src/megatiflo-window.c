@@ -105,10 +105,12 @@ load_page (gint page_num)
   char *page;
   
   url_string = g_string_new (NULL);
-  url_template = "https://megogo.net/ru/search-extended"
-                 "?page=%d"
-                 "&q=%%D1%%82%%D0%%B8%%D1%%84%%D0%%BB%%D0%%BE"
-                 "&tab=video";
+  url_template = "https://megogo.net/ru/search-extended?"
+                 "page=%d&"
+                 "q=%%D1%%81%%20%%D1%%82%%D0%%B8%%D1%%84%%D0%%BB%%D0%%BE%%D0"
+                 "%%BA%%D0%%BE%%D0%%BC%%D0%%BC%%D0%%B5%%D0%%BD%%D1%%82%%D0%%B0"
+                 "%%D1%%80%%D0%%B8%%D0%%B5%%D0%%BC&"
+                 "tab=video";
 
   g_string_printf (url_string, url_template, page_num);
 
