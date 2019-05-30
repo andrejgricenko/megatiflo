@@ -145,9 +145,17 @@ load_films (GTask        *task,
   GList *films = NULL;
   gboolean match;
 
-  regex = g_regex_new ("<[^>]+class\\s*=\\s*[\'\"]\\s*video-title[^>]+>"
-                       "\\s*([^\\s][^(]+[^\\s(])\\s*\\(\\s*версия",
+  regex = g_regex_new ("<[^>]+class\\s*=\\s*[\'\"][^\'\"]+"
+                       "videoItem[^\'\"]+[\'\"]"
+                       "[^>]+"
+                       "title\\s*=\\s*[\'\"]\\s*"
+                       "([^\\s][^(]+[^\\s(])"
+                       "\\s*\\(\\s*версия\\s+с\\s+тифлокомментарием",
                        G_REGEX_CASELESS, 0, NULL);
+
+  /*regex = g_regex_new ("<[^>]+class\\s*=\\s*[\'\"]\\s*video-title[^>]+>"
+                       "\\s*([^\\s][^(]+[^\\s(])\\s*\\(\\s*версия",
+                       G_REGEX_CASELESS, 0, NULL);*/
 
   for (int page_num = 1;; page_num++)
     {
