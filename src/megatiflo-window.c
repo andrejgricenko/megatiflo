@@ -115,20 +115,25 @@ load_page (gint page_num)
   g_string_printf (url_string, url_template, page_num);
 
   url = g_string_free (url_string, FALSE);
-  session = soup_session_new ();
+  session = soup_session_new_with_options (SOUP_SESSION_TIMEOUT, 15,
+                                           SOUP_SESSION_IDLE_TIMEOUT, 0,
+                                           NULL);
   message = soup_message_new (SOUP_METHOD_GET, url);
 
-  soup_session_send_message (session, message);
-  g_object_get (message, 
-                "response-body", &body, 
-                NULL);
+  do
+    {
+      soup_session_send_message (session, message);
+      g_object_get (message,
+                    "response-body", &body,
+                    NULL);
+      page = g_strdup (body->data);
+      soup_message_body_free (body);
+    }
+  while (!page);
 
-  page = g_strdup (body->data);
-  
   g_free (url);
   g_object_unref (session);
   g_object_unref (message);
-  soup_message_body_free (body);
   
   return page;
 }
